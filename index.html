@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Skybound Scrap</title>
+  <style>
+    :root { --ink:#f7f3ff; --muted:#a9abd0; --panel:#151936; --panel2:#202653; --pink:#ff4f9a; --cyan:#4de7ff; --gold:#ffd166; --green:#62ef9b; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif; background:radial-gradient(circle at 15% 20%,#7b3f83 0,transparent 28%),radial-gradient(circle at 88% 12%,#274b82 0,transparent 32%),linear-gradient(150deg,#100d2d,#27133e 55%,#090b1b); }
+    .wrap { width:min(1400px,97vw); margin:0 auto; padding:26px 0 40px; }
+    .eyebrow { letter-spacing:.2em; text-transform:uppercase; color:var(--cyan); font-size:.72rem; font-weight:800; }
+    h1 { margin:5px 0 7px; font-size:clamp(2.2rem,6vw,4.7rem); line-height:.92; letter-spacing:-.07em; font-style:italic; text-shadow:5px 5px 0 #34205f; }
+    .sub { margin:0; color:var(--muted); max-width:590px; }
+    .topline { display:flex; justify-content:space-between; align-items:end; gap:20px; margin-bottom:22px; }
+    .badge { border:1px solid #4a4f8c; background:#151839aa; border-radius:999px; padding:10px 14px; color:var(--gold); font-weight:800; white-space:nowrap; }
+    .card { border:1px solid #373d78; background:linear-gradient(145deg,#171a3bdf,#0e1027ee); border-radius:22px; box-shadow:0 18px 50px #0007; overflow:hidden; }
+    .select { padding:20px; }
+    .section-title { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:15px; }
+    h2 { margin:0; font-size:1.1rem; }
+    .hint { color:var(--muted); font-size:.85rem; }
+    .fighters { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    .fighter { position:relative; text-align:left; color:var(--ink); background:linear-gradient(160deg,#292e67,#171a3a); border:1px solid #454b91; border-radius:17px; padding:16px; cursor:pointer; transition:.18s ease; }
+    .fighter:hover { transform:translateY(-3px); border-color:var(--cyan); }
+    .fighter.selected { border:2px solid var(--gold); box-shadow:0 0 0 3px #ffd16622,0 11px 30px #0005; }
+    .fighter .sigil { width:58px; height:58px; display:grid; place-items:center; border-radius:16px; background:#0b0d20; border:1px solid #5860a5; margin-bottom:11px; overflow:hidden; }
+    .fighter h3 { margin:0 0 3px; font-size:1.12rem; }
+    .fighter p { margin:0 0 13px; color:var(--muted); font-size:.84rem; min-height:35px; }
+    .stats { display:flex; gap:8px; flex-wrap:wrap; }
+    .stat { font-size:.7rem; color:#d5d6f5; border:1px solid #444a83; border-radius:999px; padding:4px 7px; }
+    button { font:inherit; }
+    .start { width:100%; margin-top:16px; padding:13px 18px; color:#120e29; background:linear-gradient(90deg,var(--gold),#ff9b66); border:0; border-radius:12px; font-weight:900; cursor:pointer; letter-spacing:.02em; }
+    .start:disabled { opacity:.45; cursor:not-allowed; }
+    .arena { display:none; }
+    .arena.active { display:block; }
+    .hud { padding:18px 20px; display:grid; grid-template-columns:1fr auto 1fr; gap:16px; align-items:center; }
+    .name-row { display:flex; justify-content:space-between; gap:12px; font-weight:800; }
+    .enemy .name-row { flex-direction:row-reverse; }
+    .meter { height:13px; padding:2px; background:#080a18; border-radius:99px; border:1px solid #404678; margin-top:7px; }
+    .fill { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--green),#d5ff75); transition:width .4s ease; }
+    .enemy .fill { margin-left:auto; background:linear-gradient(90deg,#ff9370,var(--pink)); }
+    .percent { color:var(--gold); font-weight:900; font-size:1.15rem; }
+    .vs { width:54px; height:54px; display:grid; place-items:center; border-radius:50%; background:#2a205b; color:var(--pink); border:2px solid #7c58d2; font-size:.85rem; font-weight:900; transform:rotate(-9deg); }
+    .stage { position:relative; height:700px; overflow:hidden; border-top:1px solid #6b4b32; border-bottom:1px solid #24180f; background:linear-gradient(#4b2d1c 0 57%,#173d58 57% 100%); cursor:crosshair; }
+    .world { position:absolute; left:0; top:0; width:5000px; height:100%; }
+    .office-wall { position:absolute; inset:0 0 43%; background:repeating-linear-gradient(90deg,#fff 0 95px,#e5e9ef 95px 101px),linear-gradient(#fff,#dfe4eb); border-bottom:14px solid #b9c1cc; }
+    .office-window { position:absolute; left:41%; top:9%; width:18%; min-width:420px; height:38%; border:15px solid #24170f; background:linear-gradient(145deg,#9ec8db,#467b98 50%,#25475d); box-shadow:inset 0 0 0 7px #ae8155,0 12px 20px #100a07aa; }
+    .office-window:before,.office-window:after { content:""; position:absolute; background:#25170f; }
+    .office-window:before { top:0; bottom:0; left:50%; width:8px; transform:translateX(-50%); }
+    .office-window:after { left:0; right:0; top:50%; height:8px; transform:translateY(-50%); }
+    .office-curtain { position:absolute; top:5%; width:8%; min-width:150px; height:47%; background:linear-gradient(90deg,#7a1d2b,#b13b43 48%,#5b1523); box-shadow:0 12px 18px #100a07aa; }
+    .office-curtain.left { left:34%; border-radius:0 0 35% 12%; } .office-curtain.right { left:59%; border-radius:0 0 12% 35%; }
+    .office-desk { position:absolute; left:36%; width:28%; min-width:620px; height:70px; bottom:105px; border-radius:12px 12px 3px 3px; background:linear-gradient(#8d5a35,#4b2a18); border:7px solid #2a180e; box-shadow:0 22px 0 -4px #2a180e,0 30px 25px #100a07aa; }
+    .office-desk:before { content:""; position:absolute; left:14%; right:14%; bottom:-105px; height:105px; border-left:15px solid #2a180e; border-right:15px solid #2a180e; }
+    .office-desk:after { content:""; position:absolute; left:45%; top:14px; width:10%; height:28px; border-radius:4px; background:#d4bd83; box-shadow:0 0 0 4px #52351e; }
+    .stars,.moon,.city { display:none; }
+    .stars { position:absolute; inset:0; opacity:.8; background-image:radial-gradient(#fff 1px,transparent 1px),radial-gradient(#ffdbf4 1px,transparent 1px); background-size:57px 43px,91px 67px; background-position:10px 5px,30px 22px; }
+    .moon { position:absolute; width:142px; height:142px; border-radius:50%; right:10%; top:34px; background:#ffe4b0; box-shadow:0 0 55px #ff9d9d99,0 0 120px #ff7d7d44; }
+    .city { position:absolute; inset:auto 0 58px; height:145px; opacity:.78; background:linear-gradient(135deg,transparent 0 8%,#21173f 8% 19%,transparent 19% 27%,#21173f 27% 48%,transparent 48% 60%,#21173f 60% 85%,transparent 85%); background-size:180px 100%; }
+    .platform { position:absolute; left:6%; right:6%; bottom:43px; height:18px; border-radius:6px; background:linear-gradient(#f7dcff,#ac73dc); box-shadow:0 10px 0 #5c3a9a,0 16px 30px #060713; }
+    .platform:before,.platform:after { content:""; position:absolute; bottom:-28px; width:8px; height:30px; background:#7149ab; }
+    .platform:before { left:15%; transform:skew(-20deg); } .platform:after { right:15%; transform:skew(20deg); }
+    .platform.ledge { height:14px; bottom:auto; border-radius:5px; box-shadow:0 7px 0 #5c3a9a,0 12px 24px #060713; background:linear-gradient(#d9c8ff,#8f5fca); }
+    .platform.ledge:before,.platform.ledge:after { bottom:-18px; height:20px; width:5px; }
+    .ledge.left { left:12%; right:auto; width:25%; top:57%; }
+    .ledge.center { left:37%; right:auto; width:26%; top:40%; }
+    .ledge.right { left:auto; right:12%; width:25%; top:57%; }
+    .ledge.high-left { left:4%; right:auto; width:20%; top:24%; }
+    .ledge.high-right { left:auto; right:4%; width:20%; top:24%; }
+    .combatant { position:absolute; bottom:58px; width:90px; height:104px; filter:drop-shadow(0 9px 3px #08091899); transition:left .08s linear, right .08s linear, transform .2s; }
+    #heroSprite { left:18%; } #foeSprite { right:18%; transform:scaleX(-1); }
+    .combatant.hit { animation:shake .25s linear; } @keyframes shake { 25%{transform:translateX(-8px) rotate(-5deg)} 75%{transform:translateX(8px) rotate(5deg)} }
+    .person { --skin:#c98261; --hair:#281d36; --suit:#5d64e8; --accent:#ffcf57; position:absolute; left:14px; bottom:0; width:62px; height:102px; }
+    .person .head { position:absolute; left:18px; top:5px; width:30px; height:32px; border-radius:46% 46% 43% 43%; background:var(--skin); border:2px solid #261d3b; z-index:3; }
+    .person .head:before { content:""; position:absolute; left:-2px; top:-6px; width:30px; height:17px; border-radius:50% 55% 35% 25%; background:var(--hair); transform:rotate(-6deg); }
+    .person .head:after { content:"•  •"; position:absolute; left:5px; top:13px; color:#251a34; font:900 8px/1 sans-serif; letter-spacing:3px; }
+    .person .torso { position:absolute; left:10px; top:34px; width:43px; height:40px; border-radius:14px 14px 9px 9px; background:var(--suit); border:2px solid #261d3b; }
+    .person .torso:after { content:""; position:absolute; left:17px; top:7px; width:8px; height:25px; border-radius:5px; background:var(--accent); opacity:.9; }
+    .person .arm { position:absolute; top:38px; width:12px; height:37px; border-radius:9px; background:var(--skin); border:2px solid #261d3b; z-index:-1; }
+    .person .arm.left { left:3px; transform:rotate(22deg); } .person .arm.right { right:1px; transform:rotate(-28deg); }
+    .person .gun { position:absolute; left:39px; top:45px; width:31px; height:8px; border-radius:3px 7px 7px 3px; background:#20243a; border:2px solid #111426; transform-origin:3px 50%; transform:rotate(var(--aim,0deg)); z-index:5; }
+    .person .gun:before { content:""; position:absolute; left:5px; top:5px; width:8px; height:13px; border-radius:2px 2px 5px 5px; background:#3d4260; transform:rotate(24deg); }
+    .person .gun:after { content:""; position:absolute; right:-7px; top:1px; width:7px; height:4px; background:#65edff; box-shadow:0 0 8px #65edff; }
+    .person .gun.musket { width:48px; height:6px; background:#604632; border-color:#241a18; }
+    .person .gun.musket:before { left:9px; top:3px; width:11px; height:15px; background:#31242a; }
+    .person .gun.musket:after { right:-8px; top:0; width:8px; height:3px; background:#d8c7a2; box-shadow:none; }
+    .person .gun.rifle { width:43px; height:6px; background:#3b4f58; border-color:#182329; }
+    .person .gun.rifle:after { right:-7px; width:8px; background:#91c8d5; box-shadow:none; }
+    .person .gun.flintlock { width:35px; background:#76513b; border-color:#30201d; }
+    .person .gun.flintlock:after { background:#e4c47b; box-shadow:none; }
+    .person .gun.revolver { width:27px; background:#3c4153; }
+    .person .sword { display:none; position:absolute; left:51px; top:32px; width:8px; height:58px; border-radius:7px 7px 2px 2px; background:linear-gradient(90deg,#b9d8ff,#fff,#7da7df); border:2px solid #283452; transform:rotate(28deg); transform-origin:bottom center; z-index:6; box-shadow:0 0 10px #9ed4ff99; }
+    .person .sword:before { content:""; position:absolute; left:-10px; bottom:8px; width:27px; height:7px; border-radius:4px; background:#f3c65d; border:2px solid #6b432e; }
+    .person .sword:after { content:""; position:absolute; left:1px; bottom:-12px; width:5px; height:15px; border-radius:3px; background:#5b352a; }
+    .person.has-sword .sword { display:block; }
+    .person.has-sword .gun { display:none; }
+    .person .leg { position:absolute; top:68px; width:15px; height:34px; border-radius:5px 5px 9px 9px; background:#29264e; border:2px solid #261d3b; }
+    .person .leg.left { left:15px; transform:rotate(5deg); } .person .leg.right { right:10px; transform:rotate(-5deg); }
+    .person .boot { position:absolute; bottom:-2px; width:23px; height:9px; border-radius:9px 4px 4px 4px; background:#17152f; } .person .boot.left { left:8px; } .person .boot.right { right:2px; }
+    .combatant.ai-jump { filter:drop-shadow(0 9px 3px #08091899) brightness(1.12); } @keyframes hop { 50%{bottom:260px} }
+    .combatant.crouch { transform:scaleY(.72); transform-origin:bottom center; }
+    .person.nova { --suit:#ed4b92; --accent:#65edff; } .person.nova .head:before { background:#f4d04e; }
+    .person.bramble { --suit:#42a679; --accent:#e7c36d; } .person.bramble .head:before { background:#4a2d25; }
+    .person.orbit { --suit:#7359dd; --accent:#ff7bc7; } .person.orbit .head:before { background:#111a40; }
+    .person.rook { --skin:#8b5b48; --suit:#68717f; --accent:#d5e4ef; } .person.rook .head:before { background:#202735; }
+    .person.sol { --skin:#e0a477; --suit:#e77a36; --accent:#ffe16a; } .person.sol .head:before { background:#d84635; }
+    .person.echo { --skin:#b877a0; --suit:#3e9fd1; --accent:#d9f6ff; } .person.echo .head:before { background:#d5eaff; }
+    .person.extra { --skin:#c98261; --suit:#5d64e8; --accent:#ffcf57; }
+    .person.nova .head:before { background:#171a25; width:29px; height:12px; top:-5px; border-radius:50% 50% 25% 25%; }
+    .person.bramble .head:before { background:#171522; width:35px; height:15px; left:-4px; top:-12px; border-radius:3px 3px 1px 1px; box-shadow:0 -6px 0 -1px #171522; }
+    .person.bramble .head:after { content:""; left:5px; top:21px; width:20px; height:14px; border-radius:3px 3px 12px 12px; background:#30242a; }
+    .person.orbit .head:before { background:#eee8dc; width:34px; height:18px; left:-2px; top:-8px; border-radius:50%; box-shadow:-5px 5px 0 -2px #eee8dc,5px 5px 0 -2px #eee8dc; }
+    .person.rook .head:after { content:"• •"; color:#232b38; text-shadow:0 0 0 #232b38; }
+    .person.sol .head:before { background:#342318; width:32px; height:14px; left:-2px; top:-7px; border-radius:55% 45% 25% 35%; }
+    .person.echo .head:before { background:#f0eee4; width:32px; height:12px; left:-1px; top:-6px; border-radius:50%; }
+    .person.madison .head:before,.person.monroe .head:before { background:#e9e5d8; width:34px; height:17px; left:-2px; top:-8px; border-radius:50%; box-shadow:-5px 5px 0 -2px #e9e5d8,5px 5px 0 -2px #e9e5d8; }
+    .person.jackson .head:before { background:#30221e; width:32px; height:14px; left:-1px; top:-7px; border-radius:48% 52% 25% 35%; }
+    .person.grant .head:before { background:#352b2a; width:28px; height:12px; top:-5px; border-radius:45% 45% 20% 20%; }
+    .person.fdr .head:after,.person.ike .head:after { content:"• •"; color:#23202a; }
+    .person.reagan .head:before { background:#926139; width:31px; height:14px; left:-1px; top:-7px; border-radius:55% 45% 25% 35%; }
+    .person.clinton .head:before { background:#6b503c; width:30px; height:13px; top:-6px; border-radius:50%; }
+    .person.biden .head:before { background:#c9c7bd; width:33px; height:14px; left:-2px; top:-7px; border-radius:50%; }
+    .person.trump .head:before { background:#e9b84e; width:35px; height:16px; left:-3px; top:-8px; border-radius:55% 45% 25% 30%; }
+    .person.rift { --skin:#9b5d4f; --suit:#cf4b6d; --accent:#ffb85c; } .person.rift .head:before { background:#2b172d; }
+    .mini-person { transform:scale(.53); transform-origin:center; position:relative; left:-2px; top:-21px; }
+    .log { min-height:60px; padding:12px 20px; color:#d9dbff; background:#0d1026aa; border-bottom:1px solid #303666; text-align:center; font-size:.9rem; }
+    .controls { padding:18px 20px 20px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .move { padding:13px 14px; background:#232854; color:var(--ink); border:1px solid #4c5598; border-radius:13px; text-align:left; cursor:pointer; transition:.15s; }
+    .move:hover:not(:disabled) { border-color:var(--cyan); background:#2d3470; transform:translateY(-2px); }
+    .move:disabled { opacity:.4; cursor:not-allowed; }
+    .move strong { display:block; } .move span { display:block; color:#aeb2dc; font-size:.75rem; margin-top:4px; }
+    .reset { grid-column:1/-1; border:0; background:transparent; color:var(--muted); padding:5px; cursor:pointer; }
+    .result { display:none; position:absolute; inset:0; place-items:center; background:#080a18bb; backdrop-filter:blur(4px); text-align:center; padding:20px; }
+    .result.show { display:grid; } .result-box { border:1px solid #5962b2; background:#151936f2; border-radius:20px; padding:25px 30px; max-width:420px; box-shadow:0 20px 70px #0009; }
+    .result h2 { font-size:2rem; color:var(--gold); margin-bottom:8px; } .result p { color:var(--muted); margin:0 0 17px; }
+    .cutscene { display:none; position:absolute; z-index:20; inset:0; place-items:center; overflow:hidden; background:radial-gradient(circle,#5d2f83ee 0,#120d2a 65%); text-align:center; }
+    .cutscene.show { display:grid; animation:cutIn .35s ease-out; } @keyframes cutIn { from{opacity:0;transform:scale(1.08)} to{opacity:1;transform:scale(1)} }
+    .cutscene:before,.cutscene:after { content:"✦  ✧  ✦  ✧  ✦"; position:absolute; color:var(--gold); font-size:2rem; letter-spacing:1.4rem; animation:orbit 1.2s ease-in-out infinite alternate; }
+    .cutscene:before { top:18%; left:10%; } .cutscene:after { bottom:18%; right:8%; color:var(--cyan); animation-delay:.3s; } @keyframes orbit { to{transform:translateY(25px) rotate(8deg);opacity:.45} }
+    .cutscene-card { position:relative; z-index:2; padding:35px 46px; border:2px solid var(--gold); border-radius:24px; background:#17132ff2; box-shadow:0 0 0 8px #ffd16618,0 25px 80px #000b; transform:rotate(-2deg); }
+    .cutscene-kicker { color:var(--cyan); font-size:.8rem; font-weight:900; letter-spacing:.25em; text-transform:uppercase; }
+    .cutscene h2 { margin:8px 0; color:var(--gold); font-size:clamp(2rem,6vw,4.5rem); line-height:.9; font-style:italic; text-shadow:4px 4px 0 #8d3c78; }
+    .cutscene p { margin:0; color:#f0eaff; font-size:1.1rem; }
+    @media(max-width:700px){ @keyframes hop { 50%{bottom:205px} } .world{width:3200px}.topline{align-items:start; flex-direction:column}.fighters{grid-template-columns:1fr}.hud{grid-template-columns:1fr 48px 1fr; padding:14px}.stage{height:480px}.ledge.left,.ledge.right{width:30%;}.ledge.center{width:32%;left:34%;}.ledge.high-left,.ledge.high-right{width:24%;}.controls{padding:14px}.sub{font-size:.9rem} }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="topline"><div><div class="eyebrow">A tiny arena RPG</div><h1>SKYBOUND SCRAP</h1><p class="sub">Pick a fighter, build momentum, and knock your rival off the floating stage. Every match is a quick burst of choices and chaos.</p></div><div class="badge">★ 1v1 STORY MODE</div></div>
+    <section class="card select" id="selectScreen">
+      <div class="section-title"><h2>Choose your challenger</h2><span class="hint">Each fighter has a different game plan.</span></div>
+      <div class="fighters">
+        <button class="fighter" data-id="nova"><div class="sigil"><div class="person nova mini-person"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>Barack Obama</h3><p>44th president; first African American president, 2009–2017.</p><div class="stats"><span class="stat">SPEED 5</span><span class="stat">POWER 3</span></div></button>
+        <button class="fighter" data-id="bramble"><div class="sigil"><div class="person bramble mini-person"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>Abraham Lincoln</h3><p>16th president; led the Union during the Civil War, 1861–1865.</p><div class="stats"><span class="stat">SPEED 2</span><span class="stat">POWER 5</span></div></button>
+        <button class="fighter" data-id="orbit"><div class="sigil"><div class="person orbit mini-person"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>George Washington</h3><p>1st president; Revolutionary War commander, 1789–1797.</p><div class="stats"><span class="stat">SPEED 4</span><span class="stat">POWER 4</span></div></button>
+        <button class="fighter" data-id="rook"><div class="sigil"><div class="person rook mini-person"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>Theodore Roosevelt</h3><p>26th president; known for conservation and progressive reforms, 1901–1909.</p><div class="stats"><span class="stat">SPEED 2</span><span class="stat">POWER 5</span></div></button>
+        <button class="fighter" data-id="sol"><div class="sigil"><div class="person sol mini-person"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>John F. Kennedy</h3><p>35th president; New Frontier leader during the early space age, 1961–1963.</p><div class="stats"><span class="stat">SPEED 3</span><span class="stat">POWER 5</span></div></button>
+        <button class="fighter" data-id="echo"><div class="sigil"><div class="person echo mini-person"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>Thomas Jefferson</h3><p>3rd president; Declaration author and Louisiana Purchase leader, 1801–1809.</p><div class="stats"><span class="stat">SPEED 5</span><span class="stat">POWER 3</span></div></button>
+        <button class="fighter" data-id="madison"><div class="sigil"><div class="person extra mini-person" style="--suit:#5a8fbd;--accent:#f2d37b;--skin:#bd795c;--hair:#2c2733"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>James Madison</h3><p>4th president; key constitutional architect and War of 1812 president, 1809–1817.</p><div class="stats"><span class="stat">SPEED 4</span><span class="stat">POWER 4</span></div></button>
+        <button class="fighter" data-id="monroe"><div class="sigil"><div class="person extra mini-person" style="--suit:#8b5ca8;--accent:#f1d276;--skin:#d39773;--hair:#4b3026"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>James Monroe</h3><p>5th president; associated with the Monroe Doctrine, 1817–1825.</p><div class="stats"><span class="stat">SPEED 3</span><span class="stat">POWER 4</span></div></button>
+        <button class="fighter" data-id="jackson"><div class="sigil"><div class="person extra mini-person" style="--suit:#a84c52;--accent:#e8c15c;--skin:#bd7959;--hair:#2a2020"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>Andrew Jackson</h3><p>7th president; military hero whose presidency included the Indian Removal era, 1829–1837.</p><div class="stats"><span class="stat">SPEED 4</span><span class="stat">POWER 5</span></div></button>
+        <button class="fighter" data-id="grant"><div class="sigil"><div class="person extra mini-person" style="--suit:#536b80;--accent:#d9e8e6;--skin:#c28569;--hair:#352b2a"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>Ulysses S. Grant</h3><p>18th president; Union general who led during Reconstruction, 1869–1877.</p><div class="stats"><span class="stat">SPEED 2</span><span class="stat">POWER 5</span></div></button>
+        <button class="fighter" data-id="fdr"><div class="sigil"><div class="person extra mini-person" style="--suit:#397d72;--accent:#f4d06f;--skin:#c88769;--hair:#25212a"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>Franklin D. Roosevelt</h3><p>Strategist who turns patience into momentum.</p><div class="stats"><span class="stat">SPEED 3</span><span class="stat">POWER 4</span></div></button>
+        <button class="fighter" data-id="ike"><div class="sigil"><div class="person extra mini-person" style="--suit:#718a9f;--accent:#f5c867;--skin:#cb8d6c;--hair:#4a3026"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>Dwight D. Eisenhower</h3><p>Steady defender with disciplined movement.</p><div class="stats"><span class="stat">SPEED 2</span><span class="stat">POWER 5</span></div></button>
+        <button class="fighter" data-id="reagan"><div class="sigil"><div class="person extra mini-person" style="--suit:#4d76a7;--accent:#e8bd58;--skin:#d29272;--hair:#8a5d3e"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>Ronald Reagan</h3><p>Charismatic striker with a confident special move.</p><div class="stats"><span class="stat">SPEED 4</span><span class="stat">POWER 4</span></div></button>
+        <button class="fighter" data-id="clinton"><div class="sigil"><div class="person extra mini-person" style="--suit:#6b4da1;--accent:#f3c85f;--skin:#c98565;--hair:#69503b"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>Bill Clinton</h3><p>Quick-footed improviser with a tricky combo game.</p><div class="stats"><span class="stat">SPEED 5</span><span class="stat">POWER 3</span></div></button>
+        <button class="fighter" data-id="biden"><div class="sigil"><div class="person extra mini-person" style="--suit:#3f678e;--accent:#f0cf71;--skin:#d39a7b;--hair:#c9c7bd"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>Joe Biden</h3><p>Resilient fighter who recovers after heavy hits.</p><div class="stats"><span class="stat">SPEED 3</span><span class="stat">POWER 4</span></div></button>
+        <button class="fighter" data-id="trump"><div class="sigil"><div class="person extra mini-person" style="--suit:#b85b42;--accent:#f0c765;--skin:#d99d78;--hair:#e9b84e"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i></div></div><h3>Donald Trump</h3><p>Heavy power fighter with a loud finishing burst.</p><div class="stats"><span class="stat">SPEED 2</span><span class="stat">POWER 5</span></div></button>
+      </div>
+      <button class="start" id="startBtn" disabled>SELECT A FIGHTER</button>
+    </section>
+
+    <section class="card arena" id="arenaScreen">
+      <div class="hud"><div><div class="name-row"><span id="heroName">Nova</span><span class="percent" id="heroHpText">100 HP</span></div><div class="meter"><div class="fill" id="heroHp" style="width:100%"></div></div></div><div class="vs">VS</div><div class="enemy"><div class="name-row"><span id="foeName">Rival</span><span class="percent" id="foeHpText">100 HP</span></div><div class="meter"><div class="fill" id="foeHp" style="width:100%"></div></div></div></div>
+      <div class="stage"><div class="world" id="world"><div class="office-wall"></div><div class="office-window"></div><div class="office-curtain left"></div><div class="office-curtain right"></div><div class="office-desk"></div><div class="stars"></div><div class="moon"></div><div class="city"></div><div class="platform"></div><div class="platform ledge left"></div><div class="platform ledge center"></div><div class="platform ledge right"></div><div class="platform ledge high-left"></div><div class="platform ledge high-right"></div><div class="combatant" id="heroSprite"></div><div class="combatant" id="foeSprite"><div class="person rift"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i><i class="gun"></i></div></div></div><div class="result" id="result"><div class="result-box"><h2 id="resultTitle">K.O.!</h2><p id="resultText"></p><button class="start" id="againBtn">PLAY AGAIN</button></div></div></div>
+      <div class="log" id="battleLog">The crowd goes wild. Your move!</div>
+      <div class="hint" style="padding:10px 20px 0; text-align:center;">WASD move · W jump · S crouch · F strike when close (5 damage)</div>
+      <div class="hint" style="padding:10px 20px 0; text-align:center;">WASD move · W jump · S crouch · F close strike · Watch for the enemy's pulse gun</div>
+      <div class="controls"><button class="move" data-move="jab"><strong>Quick Jab · 12 dmg</strong><span>Reliable, no setup needed.</span></button><button class="move" data-move="smash"><strong>Star Smash · 22 dmg</strong><span>Big damage, but the rival may block.</span></button><button class="move" data-move="special"><strong>Signature Move</strong><span id="specialText">Use your fighter's unique power.</span></button><button class="move" data-move="guard"><strong>Guard &amp; Charge</strong><span>Reduce the next hit and gain momentum.</span></button><button class="reset" id="changeBtn">← Change fighter</button></div>
+    </section>
+  </main>
+  <script>
+    const fighters = {
+      nova:{name:'Barack Obama',style:'nova',weapon:'pistol',special:'Hope Dash · 28 dmg',specialText:'A lightning-fast strike that cannot be blocked.',power:28,guard:5},
+      bramble:{name:'Abraham Lincoln',style:'bramble',weapon:'musket',special:'Union Breaker · 30 dmg',specialText:'A crushing swing with a chance to stun.',power:30,guard:10},
+      orbit:{name:'George Washington',style:'orbit',weapon:'flintlock',special:'Liberty Well · 25 dmg',specialText:'A strategic gravity move that restores a little HP.',power:25,guard:5}
+      ,rook:{name:'Theodore Roosevelt',style:'rook',weapon:'rifle',special:'Rough Rider · 27 dmg',specialText:'A plated charge that rewards guarding.',power:27,guard:12}
+      ,sol:{name:'John F. Kennedy',style:'sol',weapon:'pistol',special:'New Frontier · 32 dmg',specialText:'A blazing launcher with the highest damage.',power:32,guard:4}
+      ,echo:{name:'Thomas Jefferson',style:'echo',weapon:'flintlock',special:'Reverb Declaration · 24 dmg',specialText:'A rapid combo that restores a little HP.',power:24,guard:6}
+      ,madison:{name:'James Madison',style:'madison',weapon:'flintlock',colors:'--suit:#5a8fbd;--accent:#f2d37b;--skin:#bd795c;--hair:#2c2733;',special:'Federal Feint · 26 dmg',specialText:'A precise counterattack.',power:26,guard:7}
+      ,monroe:{name:'James Monroe',style:'monroe',colors:'--suit:#8b5ca8;--accent:#f1d276;--skin:#d39773;--hair:#4b3026;',special:'Harmony Wave · 25 dmg',specialText:'A balanced special with steady power.',power:25,guard:7}
+      ,jackson:{name:'Andrew Jackson',style:'jackson',weapon:'rifle',colors:'--suit:#a84c52;--accent:#e8c15c;--skin:#bd7959;--hair:#2a2020;',special:'Old Hickory Rush · 31 dmg',specialText:'An aggressive close-range burst.',power:31,guard:4}
+      ,grant:{name:'Ulysses S. Grant',style:'grant',colors:'--suit:#536b80;--accent:#d9e8e6;--skin:#c28569;--hair:#352b2a;',special:'General Strike · 30 dmg',specialText:'A durable finishing hit.',power:30,guard:10}
+      ,fdr:{name:'Franklin D. Roosevelt',style:'fdr',colors:'--suit:#397d72;--accent:#f4d06f;--skin:#c88769;--hair:#25212a;',special:'New Deal · 24 dmg',specialText:'Restores a little HP after striking.',power:24,guard:8}
+      ,ike:{name:'Dwight D. Eisenhower',style:'ike',weapon:'rifle',colors:'--suit:#718a9f;--accent:#f5c867;--skin:#cb8d6c;--hair:#4a3026;',special:'Command Push · 28 dmg',specialText:'A disciplined armored attack.',power:28,guard:10}
+      ,reagan:{name:'Ronald Reagan',style:'reagan',colors:'--suit:#4d76a7;--accent:#e8bd58;--skin:#d29272;--hair:#8a5d3e;',special:'Morning Burst · 27 dmg',specialText:'A confident ranged burst.',power:27,guard:6}
+      ,clinton:{name:'Bill Clinton',style:'clinton',colors:'--suit:#6b4da1;--accent:#f3c85f;--skin:#c98565;--hair:#69503b;',special:'Rhythm Shift · 23 dmg',specialText:'A tricky combo that restores HP.',power:23,guard:6}
+      ,biden:{name:'Joe Biden',style:'biden',colors:'--suit:#3f678e;--accent:#f0cf71;--skin:#d39a7b;--hair:#c9c7bd;',special:'Resilient Charge · 26 dmg',specialText:'A recovery-focused attack.',power:26,guard:9}
+      ,trump:{name:'Donald Trump',style:'trump',colors:'--suit:#b85b42;--accent:#f0c765;--skin:#d99d78;--hair:#e9b84e;',special:'Victory Burst · 32 dmg',specialText:'A high-power finishing burst.',power:32,guard:4}
+    };
+    let chosen=null, opponent=null, heroHp=100, foeHp=100, guarded=false, locked=false, heroX=18, foeX=75, heroY=58, heroVy=0, heroGrounded=true, foeY=58, foeVy=0, foeGrounded=true, fHeld=false, gHeld=false, gunCooldown=false, aimAngle=0, foeTimer=null, foeAttackTimer=null, cutsceneTimer=null, botNextAttack=0, botNextGun=0, keys={};
+    function getPlatforms(){ const world=$('#world'); return $$('.platform').map(el=>({min:el.offsetLeft/world.clientWidth*100,max:(el.offsetLeft+el.offsetWidth)/world.clientWidth*100,top:world.clientHeight-el.offsetTop})); }
+    const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+    const cutscene=document.createElement('div'); cutscene.id='cutscene'; cutscene.className='cutscene'; cutscene.innerHTML='<div class="cutscene-card"><div class="cutscene-kicker">Skybound Scrap victory</div><h2>RIVAL<br>DEFEATED!</h2><p id="cutsceneText">The arena belongs to you.</p></div>'; $('.stage').appendChild(cutscene);
+    $$('.fighter').forEach(btn=>btn.addEventListener('click',()=>{ $$('.fighter').forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); chosen=fighters[btn.dataset.id]; $('#startBtn').disabled=false; $('#startBtn').textContent='ENTER THE ARENA'; }));
+    $('#startBtn').addEventListener('click',startGame); $('#againBtn').addEventListener('click',startGame); $('#changeBtn').addEventListener('click',()=>{ clearInterval(foeTimer); clearInterval(foeAttackTimer); $('#arenaScreen').classList.remove('active'); $('#selectScreen').style.display='block'; });
+    $$('.move').forEach(btn=>btn.addEventListener('click',()=>act(btn.dataset.move)));
+    function personMarkup(style,colors='',sword=true,weapon='pistol'){ return '<div class="person '+style+'" style="'+colors+'"><i class="head"></i><i class="arm left"></i><i class="arm right"></i><i class="torso"></i><i class="leg left"></i><i class="leg right"></i><i class="boot left"></i><i class="boot right"></i><i class="gun '+weapon+'"></i>'+(sword?'<i class="sword"></i>':'')+'</div>'; }
+    function startGame(){ if(!chosen)return; clearTimeout(cutsceneTimer); cutscene.classList.remove('show'); clearInterval(foeTimer); clearInterval(foeAttackTimer); const ids=Object.keys(fighters).filter(id=>fighters[id]!==chosen); opponent=fighters[ids[Math.floor(Math.random()*ids.length)]]; heroHp=100;foeHp=100;guarded=false;locked=false;heroX=18;foeX=75;heroY=58;heroVy=0;heroGrounded=true;foeY=58;foeVy=0;foeGrounded=true;fHeld=false;gHeld=false;gunCooldown=false;aimAngle=0;botNextAttack=0;botNextGun=0; $('#selectScreen').style.display='none';$('#arenaScreen').classList.add('active');$('#result').classList.remove('show');$('#heroName').textContent=chosen.name;$('#foeName').textContent=opponent.name;$('#heroSprite').innerHTML=personMarkup(chosen.style,chosen.colors||'',true,chosen.weapon||'pistol');$('#foeSprite').innerHTML=personMarkup(opponent.style,opponent.colors||'',false,opponent.weapon||'pistol');$('#specialText').textContent=chosen.specialText;setAim(0);moveHero();moveFoe();update();say('Watch for '+opponent.name+'\'s '+(opponent.weapon||'pistol')+'. Your move!'); foeTimer=setInterval(opponentMove,520); foeAttackTimer=setInterval(enemySpamF,180); }
+    function act(move){ if(locked)return; let damage=0, message=''; if(move==='jab'){damage=12;message=chosen.name+' lands a quick jab.';} if(move==='smash'){damage=22;message=chosen.name+' winds up a Star Smash!';} if(move==='special'){damage=chosen.power;message=chosen.name+' unleashes '+chosen.special.split(' · ')[0]+'!'; if(chosen.name==='Orbit'||chosen.name==='Echo')heroHp=Math.min(100,heroHp+8); if(chosen.name==='Rook')guarded=true;} if(move==='guard'){guarded=true;say(chosen.name+' braces for impact and stores momentum.'); enemyTurn();return;} foeHp=Math.max(0,foeHp-damage); pulse('#foeSprite'); say(message+' It deals '+damage+' damage.'); update(); if(foeHp<=0){end(true);return;} enemyTurn(); }
+    function sound(kind){ const Audio=window.AudioContext||window.webkitAudioContext; if(!Audio)return; const ctx=sound.ctx||(sound.ctx=new Audio()); const osc=ctx.createOscillator(), gain=ctx.createGain(); osc.type=kind==='hit'?'square':'sawtooth'; osc.frequency.setValueAtTime(kind==='hit'?130:720,ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(kind==='hit'?70:190,ctx.currentTime+.12); gain.gain.setValueAtTime(.045,ctx.currentTime); gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.13); osc.connect(gain).connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime+.14); }
+    function setAim(angle){ aimAngle=angle; const gun=$('#heroSprite .gun'); if(gun)gun.style.setProperty('--aim',angle+'deg'); }
+    function fireGun(){ if(locked||gunCooldown)return; gunCooldown=true; const heroRect=$('#heroSprite').getBoundingClientRect(), foeRect=$('#foeSprite').getBoundingClientRect(); const targetAngle=Math.atan2((foeRect.top+foeRect.height/2)-(heroRect.top+heroRect.height/2),(foeRect.left+foeRect.width/2)-(heroRect.left+heroRect.width/2))*180/Math.PI; const difference=Math.abs(((aimAngle-targetAngle+540)%360)-180); sound('shot'); if(difference<=30){ const damage=10+Math.floor(Math.random()*11); foeHp=Math.max(0,foeHp-damage); pulse('#foeSprite'); setTimeout(()=>sound('hit'),70); say(chosen.name+' fires the pulse gun for '+damage+' damage!'); update(); if(foeHp<=0)end(true); } else say('The shot misses — aim at '+opponent.name+' first.'); setTimeout(()=>gunCooldown=false,650); }
+    function enemyTurn(){ locked=true; setTimeout(()=>{ let raw=Math.floor(Math.random()*9)+11; let blocked=Math.random()<.22; if(blocked)raw=Math.floor(raw/2); let dealt=guarded?Math.max(2,raw-10):raw; guarded=false; heroHp=Math.max(0,heroHp-dealt); pulse('#heroSprite'); say(blocked?opponent.name+' blocks part of your attack, then counters for '+dealt+' damage.':opponent.name+' swoops in for '+dealt+' damage.'); update(); if(heroHp<=0)end(false); else locked=false; },650); }
+    function update(){ $('#heroHp').style.width=heroHp+'%';$('#foeHp').style.width=foeHp+'%';$('#heroHpText').textContent=heroHp+' HP';$('#foeHpText').textContent=foeHp+' HP'; }
+    function say(t){$('#battleLog').textContent=t;}
+    function pulse(id){const el=$(id);el.classList.remove('hit');void el.offsetWidth;el.classList.add('hit');}
+    function end(win){locked=true;clearInterval(foeTimer);clearInterval(foeAttackTimer);if(win){sound('hit');$('#cutsceneText').textContent=opponent.name+' has been launched from the arena!';cutscene.classList.add('show');cutsceneTimer=setTimeout(()=>{$('#resultTitle').textContent='RIVAL LAUNCHED!';$('#resultText').textContent='The Skybound crowd is chanting your name.';$('#result').classList.add('show');cutscene.classList.remove('show');},2800);}else{$('#resultTitle').textContent='YOU GOT LAUNCHED!';$('#resultText').textContent=opponent.name+' takes the round, but your next run can be even stronger.';$('#result').classList.add('show');}}
+    function moveHero(){ $('#heroSprite').style.left=heroX+'%'; $('#heroSprite').style.bottom=heroY+'px'; moveCamera(); }
+    function moveFoe(){ $('#foeSprite').style.right=(100-foeX)+'%'; $('#foeSprite').style.bottom=foeY+'px'; const gun=$('#foeSprite .gun'); if(gun){ const worldAngle=Math.atan2(heroY-foeY,heroX-foeX)*180/Math.PI; gun.style.setProperty('--aim',(180-worldAngle)+'deg'); } }
+    function moveCamera(){ const stage=$('.stage'), world=$('#world'); const heroPixel=heroX/100*world.offsetWidth; const target=stage.clientWidth/2-heroPixel; const min=stage.clientWidth-world.offsetWidth; world.style.transform='translateX('+Math.max(min,Math.min(0,target))+'px)'; }
+    function smoothMovement(time){ const dt=Math.min(.033,(time-(smoothMovement.last||time))/1000); if($('#arenaScreen').classList.contains('active')&&!$('#result').classList.contains('show')){ const direction=(keys.a?-1:0)+(keys.d?1:0); if(direction)heroX=Math.max(4,Math.min(94,heroX+direction*27*dt)); const available=getPlatforms(); if(heroGrounded&&!available.some(p=>Math.abs(heroY-p.top)<5&&heroX>=p.min-4&&heroX<=p.max)){heroGrounded=false;heroVy=0;} if(!heroGrounded){ const previousY=heroY; heroY+=heroVy*dt; heroVy-=1700*dt; const landing=available.filter(p=>heroX>=p.min-4&&heroX<=p.max&&previousY>=p.top&&heroY<=p.top).sort((a,b)=>b.top-a.top)[0]; if(landing){heroY=landing.top;heroVy=0;heroGrounded=true;say('You landed on a platform!');} else if(heroY<=58){heroY=58;heroVy=0;heroGrounded=true;} } updateBotPhysics(dt,available); moveHero();moveFoe(); } smoothMovement.last=time; requestAnimationFrame(smoothMovement); }
+    function updateBotPhysics(dt,available){ if(foeGrounded&&!available.some(p=>Math.abs(foeY-p.top)<5&&foeX>=p.min-4&&foeX<=p.max)){foeGrounded=false;foeVy=0;} if(!foeGrounded){const previousY=foeY;foeY+=foeVy*dt;foeVy-=1700*dt;const landing=available.filter(p=>foeX>=p.min-4&&foeX<=p.max&&previousY>=p.top&&foeY<=p.top).sort((a,b)=>b.top-a.top)[0];if(landing){foeY=landing.top;foeVy=0;foeGrounded=true;}else if(foeY<=58){foeY=58;foeVy=0;foeGrounded=true;}}}
+    function opponentMove(){ if(locked||!$('#arenaScreen').classList.contains('active'))return; const distance=heroX-foeX; const gap=Math.abs(distance); const weak=foeHp<=30; const retreating=weak&&gap<30; const direction=retreating?(distance>0?-1:1):(distance===0?0:Math.sign(distance)); const pace=retreating?3.4:(gap>34?3.1:gap>16?2.2:1.1); foeX=Math.max(4,Math.min(94,foeX+direction*pace)); moveFoe(); const heroIsAbove=heroY>110; if(heroIsAbove&&gap<26&&foeGrounded&&Math.random()<.45)botJump(); else if(!heroIsAbove&&gap<15&&Math.random()<.2)foeX=Math.max(4,Math.min(94,foeX+(distance>0?-2:2))); const now=performance.now(); if(gap>18&&gap<70&&Math.abs(heroY-foeY)<50&&now>=botNextGun){botShoot();botNextGun=now+(weak?700:1250);} }
+    function botShoot(){ const damage=10+Math.floor(Math.random()*11); sound('shot'); heroHp=Math.max(0,heroHp-damage); pulse('#heroSprite'); say(opponent.name+' fires the pulse gun for '+damage+' damage!'); update(); sound('hit'); if(heroHp<=0)end(false); }
+    function botJump(){ if(!foeGrounded)return; foeVy=1400;foeGrounded=false;const el=$('#foeSprite');el.classList.add('ai-jump');setTimeout(()=>el.classList.remove('ai-jump'),730); }
+    function enemySpamF(){ const sameLevel=Math.abs(heroY-foeY)<=42; const close=Math.abs(heroX-foeX)<=14; const now=performance.now(); if(!locked&&sameLevel&&close&&now>=botNextAttack){ enemyCloseStrike(); botNextAttack=now+(foeHp<=30?280:560); } }
+    function enemyCloseStrike(){ if(locked)return; heroHp=Math.max(0,heroHp-5); pulse('#heroSprite'); say(opponent.name+' charges in and presses F — 5 damage!'); update(); if(heroHp<=0)end(false); }
+    function jump(){ if(!heroGrounded)return; heroVy=1400; heroGrounded=false; }
+    function dropThrough(){ if(heroGrounded&&heroY>70){ heroGrounded=false; heroVy=-300; heroY-=6; say('You drop through the platform.'); } }
+    function closeStrike(){ if(locked)return; const sameLevel=Math.abs(heroY-58)<=42; if(sameLevel&&Math.abs(heroX-foeX)<=14){ foeHp=Math.max(0,foeHp-5); pulse('#foeSprite'); say(chosen.name+' lands a close-range strike for 5 damage!'); update(); if(foeHp<=0)end(true); } else { say('You need to be close and on the same level.'); } }
+    document.addEventListener('keydown',e=>{ const key=e.key.toLowerCase(); if(!$('#arenaScreen').classList.contains('active')||$('#result').classList.contains('show'))return; if(['w','a','s','d','f','1','2'].includes(key))e.preventDefault(); keys[key]=true; if(key==='w'&&e.repeat===false)jump(); if(key==='s'){ $('#heroSprite').classList.add('crouch'); if(e.repeat===false)dropThrough(); } if(key==='2'&&e.repeat===false){ $('#heroSprite .person').classList.add('has-sword'); say('You equip the Skyblade.'); } if(key==='1'&&e.repeat===false){ $('#heroSprite .person').classList.remove('has-sword'); say('You equip the pulse gun.'); } if(key==='f'&&!fHeld){fHeld=true;closeStrike();} });
+    document.addEventListener('keyup',e=>{ const key=e.key.toLowerCase(); keys[key]=false; if(key==='s')$('#heroSprite').classList.remove('crouch'); if(key==='f')fHeld=false; });
+    $('.stage').addEventListener('pointermove',e=>{ if(!$('#arenaScreen').classList.contains('active'))return; const hero=$('#heroSprite').getBoundingClientRect(); setAim(Math.atan2(e.clientY-(hero.top+hero.height/2),e.clientX-(hero.left+hero.width/2))*180/Math.PI); });
+    $('.stage').addEventListener('pointerdown',e=>{ if($('#arenaScreen').classList.contains('active')&&!$('#result').classList.contains('show'))fireGun(); });
+    requestAnimationFrame(smoothMovement);
+  </script>
+</body>
+</html>
